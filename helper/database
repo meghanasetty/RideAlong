@@ -1,0 +1,75 @@
+var mysql      = require('mysql');
+
+var pool =  mysql.createPool({
+
+    host     : 'localhost',
+
+    user     : 'root',
+
+    password : 'root',
+
+    connectionLimit : 10000,
+
+    database : 'travellinapp_database'
+
+});
+var userTableColums = {status:'status',tableName: 'USERINFO',isRegistered : 'isregistered',userName: 'username',contact:'contact',gcm:'gcmkey',id:'id',shareStatus:'status',lastLocation: "lastlocation",isOnline:"isonline"};
+var userFriendColums = {tableName: 'FRIENDTABLE',friendOne: 'friendone',friendTwo: 'friendtwo',shareStatusOneTwo:'sharestatusonetwo',shareStatusTwoOne:'sharestatustwoone'};
+var userPostTable = {tableName:'POSTSTABLE',id:'id',postId:'postid',title:'title',description:'description',location:'location',timeStamp:'timestamp'};
+var userPostImageTable = {tableName:'POSTSIMAGETABLE',postID:'postid',imageLocation:'imagelocation'};
+pool.getConnection(function(err, connection) {
+    // Use the connection
+    var userTable ="CREATE TABLE IF NOT EXISTS "+userTableColums.tableName+"("+userTableColums.isRegistered +" bool,"+
+            userTableColums.userName+" varchar(200),"+
+            userTableColums.contact+" varchar(200) unique,"+
+            userTableColums.gcm+" varchar(200) unique,"+
+            userTableColums.lastLocation+" varchar(200),"+
+            userTableColums.id+" int  not null auto_increment,"+
+            userTableColums.shareStatus+" bool,"+
+            userTableColums.isOnline+" bool,"+
+            "primary key( "+userTableColums.id+")"
+        +")";
+    connection.query( userTable, function(err, rows) {
+        // And done with the connection.
+        console.log('error log : '+err);
+        console.log('success log: '+JSON.stringify(rows));
+        if(err == null){
+            var userFriendTable = "CREATE TABLE IF NOT EXISTS "+userFriendColums.tableName+"("+
+                userFriendColums.friendOne+" int,"+
+                userFriendColums.friendTwo+" int,"+
+                userFriendColums.shareStatusOneTwo+" bool,"+
+                userFriendColums.shareStatusTwoOne+" bool,"+
+                "FOREIGN KEY ("+userFriendColums.friendOne+") REFERENCES "+userTableColums.tableName+"("+userTableColums.id+") ON DELETE CASCADE,"+
+                "FOREIGN KEY ("+userFriendColums.friendTwo+") REFERENCES "+userTableColums.tableName+"("+userTableColums.id+") ON DELETE CASCADE"
+            +")";
+            connection.query( userFriendTable, function(err, rows) {
+                if(err == null){
+                    var postTable="CREATE TABLE IF NOT EXISTS "+userPostTable.tableName+"("+
+                     userPostTable.id+" int,"+
+                     userPostTable.description+" varchar(5000),"+
+                     userPostTable.title+" varchar(1000),"+
+                     userPostTable.location+" varchar(1000),"+
+                     userPostTable.timeStamp+" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"+
+                     userPostTable.postId+" int  auto_increment PRIMARY KEY,"+
+                     "FOREIGN KEY ("+userPostTable.id+") REFERENCES "+userTableColums.tableName+"("+userTableColums.id+") ON DELETE CASCADE"
+                        +")";
+                    connection.query( postTable, function(err, rows) {
+                        var postImageTable = "CREATE TABLE IF NOT EXISTS "+userPostImageTable.tableName+"("+
+                            userPostImageTable.imageLocation+" varchar(1000),"+
+                            userPostImageTable.postID+" int ,"+
+                            "FOREIGN KEY ("+userPostImageTable.postID+") REFERENCES "+userPostTable.tableName+"("+userPostTable.postId+") ON DELETE CASCADE"
+                            +")";
+                        connection.query( postImageTable, function(err, rows) {
+                            if(err == null)
+                                console.log("database initialization is done");
+                            else
+                                console.log("error in database initialization : "+err);
+                        });
+                    });
+                    }
+                connection.release();
+            });
+        }
+    });
+});
+module.exports = {pool: pool,userFriendColums: userFriendColums,userTableColums:userTableColums,userPostTable:userPostTable,userPostImageTable:userPostImageTable};

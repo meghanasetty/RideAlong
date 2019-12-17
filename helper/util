@@ -1,0 +1,12 @@
+var validateRegister = function(data){
+    if( data.contact == undefined || data.contact == null || data.gcmkey == undefined || data.gcmkey==null || data.gcmkey.trim().localeCompare("")==0)
+        return false;
+    return true;
+}
+var validateFriendsList = function (data) {
+    if( data.contact == undefined || data.contact == null || data.gcmkey == undefined || data.gcmkey==null || data.friendslist == undefined || (Object.prototype.toString.call( data.friendslist ) !== '[object Array]') )
+        return false;
+    return true;
+}
+
+module.exports = {validateRegister : validateRegister,validateFriendsList: validateFriendsList}
